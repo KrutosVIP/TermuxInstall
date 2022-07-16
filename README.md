@@ -10,6 +10,7 @@ $ pkg install python3 proot wget
 After that, you can install `bin` files with `make install` command <br/>
 Or use binaries directly from there. <br/>
 > If Termux gives "permission denied", use command `chmod 0700 bin/*` from here
+
 Or, even more faster, just install deb from Releases, by using `dpkg -i <deb>`
 
 ## Usage
