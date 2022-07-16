@@ -10,6 +10,7 @@ $ pkg install python3 proot wget
 After that, you can install `bin` files with `make install` command <br/>
 Or use binaries directly from there. <br/>
 > If Termux gives "permission denied", use command `chmod 0700 bin/*` from here
+Or, even more faster, just install deb from Releases, by using `dpkg -i <deb>`
 
 ## Usage
 
@@ -55,3 +56,4 @@ $ termux-remove32
 - /home in accessibility
 - Can be built into .deb using termux-create-package and manifest here
 - Installer made up right from [TermuxInstaller.java](https://github.com/termux/termux-app/blob/master/app/src/main/java/com/termux/app/TermuxInstaller.java) code
+- Written in python and Bash (Also used scripts from proot package - termux-chroot)
