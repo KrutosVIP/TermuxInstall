@@ -1,0 +1,40 @@
+{
+    "control": {
+        "Package": "termux-install",
+        "Version": "1.0.2",
+        "Architecture": "all",
+        "Maintainer": "KrutosX <developer@krutosx.tk>",
+        "Depends": "python (>= 3.0), wget, proot, libandroid-support",
+        "Homepage": "https://github.com/TheDarkBug/uwufetch",
+        "Description": [
+            "Termux Container Installation tool based on python and proot"
+        ]
+    },
+    "installation_prefix": "/data/data/com.termux/files/usr",
+    "data_files": {
+        "bin/termux-chroot32": {
+            "source": "bin/termux-chroot32",
+            "perm": "0700"
+        },
+        "bin/termux-chroot64": {
+            "source": "bin/termux-chroot64",
+            "perm": "0700"
+        },
+        "bin/termux-install32": {
+            "source": "bin/termux-install32",
+            "perm": "0700"
+        },
+        "bin/termux-install64": {
+            "source": "bin/termux-install64",
+            "perm": "0700"
+        },
+        "bin/termux-remove32": {
+            "source": "bin/termux-remove32",
+            "perm": "0700"
+        },
+        "bin/termux-remove64": {
+            "source": "bin/termux-remove64",
+            "perm": "0700"
+        }
+    }
+}

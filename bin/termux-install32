@@ -1,0 +1,203 @@
+#!/data/data/com.termux/files/usr/bin/env python3
+
+# Bootstrap Ver: bootstrap-2022.07.10-r1
+
+from platform import machine
+import os
+import sys
+import shutil
+import subprocess
+import tempfile
+import shlex
+from zipfile import ZipFile
+import hashlib
+
+# Machine Arch
+arch = machine()
+
+# Bootstrap
+bootstrap_ver = "bootstrap-2022.07.10-r1 APT"
+bootstrap_baselink = "https://github.com/termux/termux-packages/releases/download/bootstrap-2022.07.10-r1%2Bapt-android-7/bootstrap-{0}.zip"
+
+bootstrap_sha256 = {'aarch64': 'a5e598a70af1097428d9555f1c01ef6266b189f211cb5f050cc13f1da6aad5b5', 'arm': '9ace559e284d9a9cc4c57498ab43c39d9a7957b05dd2b9a67b547e73f12784f5', 'i686': '031809dc2b10b0a3c6e8bdc99ed6663ffd0b3d3110d8494acc0b092709aea37a', 'x86_64': '42447a3c11db3727f07c76d40b9d97f1c7ad713ae65516b2ae67927d7e6081ad'}
+
+# Variables
+base_dir = f"{os.environ['PREFIX']}/var/lib"
+program_dir = f"{base_dir}/termux_install"
+chroot_dir = f"{program_dir}/chroot32"
+exec_dir = os.getcwd()
+
+help_text = """termux-install32 - Install 32 bit Termux chroot on your machine
+-----
+This program is needed to install Termux chroot from base Termux bootstrap located at https://github.com/termux/termux-packages/releases
+Bootstrap version: %s
+Chroot installed to %s
+-----
+Flags:
+    -h  Show help
+    -f  Force install up on existing chroot
+    -r  Reinstall chroot | REMOVES ALL DATA!
+    -i  Standart install of chroot"""
+
+# Check up args.
+if len(sys.argv) > 1: # If has arg...
+	flag = sys.argv[1] # Parse it
+else: # If no arg...
+	flag = "-i" # Then, just use install arg.
+
+if flag == "-h": # Help text
+	print(help_text % (bootstrap_ver, chroot_dir)) # Insert version and path
+	sys.exit()
+
+if flag not in ["-i", "-r", "-f"]: # Show error, help and when exit.
+	print(f"ERROR: Unknown argument passed - '{flag}'\n")
+	print(help_text % (bootstrap_ver, chroot_dir))
+	sys.exit()
+
+# Functions
+# Setup additional files
+def setup_files():
+	with open(f"{chroot_dir}/usr/etc/motd") as f: motd = f.read().replace("Termux", f"Termux-Install {arch.upper()} Container", 1)
+	motd += "Termux Install on GitHub: https://github.com/KrutosVIP/TermuxInstall\n\n"
+	motd = motd.replace("at https://termux.dev/issues", "at Termux-Install GitHub", 1)
+	with open(f"{chroot_dir}/usr/etc/motd", "w") as f: f.write(motd)
+
+# shell command, pass arg as normal command. Returns result code.
+def shell(command):
+	return subprocess.run(shlex.split(command), stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT).returncode
+# Wget wrapper
+def wget(link, output):
+	return shell(f"wget {link} -O {output}")
+
+# Setup rchmod on all dirs in list
+def setup_perms(dirs, mode):
+	os.chdir(f"{chroot_dir}/usr")
+	for dir in dirs:
+		recursive_chmod(dir, mode)
+	os.chdir(exec_dir)
+
+	return 0
+
+# Symlinks creator
+def symlink(file):
+	os.chdir(f"{chroot_dir}/usr")
+
+	with open(file) as f: # Read SYMLINKS.txt from unpacked Bootstrap
+		symlinks = f.read().split("\n") # Read all file and split by \n
+
+	if symlinks[-1] == "": symlinks.pop() # Remove last "" in list
+
+	os.remove(file) # Remove file
+
+	for link in symlinks: # For symlink in symlinks
+		link = link.split("←") # Split by this symbol
+
+		# Symlinks in this file represented like this:
+		# coreutils←./bin/mktemp
+		# So we need to make symlink from coreutils to ./bin/mktemp, right?
+		# No, we need to make symlink from ./bin/coreutils to ./bin/mktemp. And thats why the code looks so complex.
+		if os.path.islink(link[1]): os.remove(link[1])
+
+		os.symlink(f"{chroot_dir}/usr/" + os.path.join(os.path.dirname(link[1]), link[0]), link[1])
+
+	os.chdir(exec_dir) # Goto execution dir
+
+	return 0
+
+# Recursive Chmod on dir and files
+def recursive_chmod(dir, mode):
+	shell(f"chmod {mode} {dir} -R")
+	shell(f"chmod {mode} {dir}")
+	return 0
+
+# Unzip archive
+def unzip(archive, out):
+	try:
+		with ZipFile(archive) as zip:
+			zip.extractall(out)
+	except Exception as e:
+		return 1
+
+	return 0
+
+# SHA256 Check
+def check_integrity(file, sum):
+	BUFFER = 65536 # 64KB Buffer
+	sha256 = hashlib.sha256()
+
+	with open(file, "rb") as f: # Read file by chunks
+		while True:
+			data = f.read(BUFFER)
+			# End of data? Stop.
+			if not data: break
+
+			sha256.update(data)
+
+	sha256 = sha256.hexdigest()
+
+	if sum == sha256:
+		return 0
+
+	return 1
+
+# All checks
+if (not flag in ["-f", "-r"]) and (os.path.isdir(chroot_dir)):
+	print("ERROR: Chroot dir exists. Use flag -r if you want to reinstall chroot or use termux-remove32 to remove it")
+	sys.exit()
+elif (flag == ["-r"]) and (os.path.isdir(chroot_dir)):
+	shutil.rmtree(chroot_dir)
+
+# Select arch
+
+# Support was not really checked.
+if arch in ["i686", "x86_64", "AMD64"]:
+	print("WARNING: Experimental feature.")
+	arch = "i686"
+
+elif arch in ["arm", "aarch64", "armv7l", "armv8l", "armv7h", "armv9l", "armv9h", "armv9"]:
+	arch = "arm"
+
+else:
+	print("ERROR: Unknown arch")
+	sys.exit(0)
+
+# Format bootstrap link
+bootstrap_link = bootstrap_baselink.format(arch)
+
+print(f"""-----
+Installing Termux Bootstrap {bootstrap_ver} for {arch}
+To: {chroot_dir}
+-----""")
+
+# Create temp dir
+with tempfile.TemporaryDirectory() as work_dir:
+	bootstrap_file = f"{work_dir}/bootstrap.zip"
+
+	# Download file using wget
+	print(f"> Downloading bootstrap...")
+	if wget(bootstrap_link, bootstrap_file):
+		print("ERROR: Something gone wrong. Stop.")
+		sys.exit(0)
+
+	print(f"> Checking integrity...")
+	if check_integrity(bootstrap_file, bootstrap_sha256[arch]):
+		print("ERROR: Something gone wrong. Stop.")
+		sys.exit(0)
+
+	print(f"> Unpacking bootstrap to Chroot Dir...")
+	if unzip(bootstrap_file, f"{chroot_dir}/usr"):
+		print("ERROR: Something gone wrong. Stop.")
+		sys.exit(0)
+	if not os.path.isdir: os.mkdir(f"{chroot_dir}/home")
+
+	print("> Setting up symlinks...")
+	symlink(f"{chroot_dir}/usr/SYMLINKS.txt")
+
+	print("> Setting up permissions...")
+	setup_perms(["./bin", "./libexec", "./lib/apt/apt-helper", "./lib/apt/methods"], "0700")
+
+	if flag != "-f":
+		setup_files()
+
+	print("Done! Use termux-chroot32 in this dir to get in chroot.")
+
