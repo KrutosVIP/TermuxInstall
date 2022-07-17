@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/env python3
 
-# Bootstrap Ver: bootstrap-2022.07.10-r1
+# Bootstrap Ver: bootstrap-2022.07.17-r1
 
 from platform import machine
 import os
@@ -16,10 +16,10 @@ import hashlib
 arch = machine()
 
 # Bootstrap
-bootstrap_ver = "bootstrap-2022.07.10-r1 APT"
-bootstrap_baselink = "https://github.com/termux/termux-packages/releases/download/bootstrap-2022.07.10-r1%2Bapt-android-7/bootstrap-{0}.zip"
+bootstrap_ver = "bootstrap-2022.07.17-r1 APT"
+bootstrap_baselink = "https://github.com/termux/termux-packages/releases/download/bootstrap-2022.07.17-r1%2Bapt-android-7/bootstrap-{0}.zip"
 
-bootstrap_sha256 = {'aarch64': 'a5e598a70af1097428d9555f1c01ef6266b189f211cb5f050cc13f1da6aad5b5', 'arm': '9ace559e284d9a9cc4c57498ab43c39d9a7957b05dd2b9a67b547e73f12784f5', 'i686': '031809dc2b10b0a3c6e8bdc99ed6663ffd0b3d3110d8494acc0b092709aea37a', 'x86_64': '42447a3c11db3727f07c76d40b9d97f1c7ad713ae65516b2ae67927d7e6081ad'}
+bootstrap_sha256 = {'aarch64': 'ba17f89fcada6635205d428d7cb3b82f77f8b4ffdb80a416344abba35221cceb', 'arm': 'd99c4a98bc1264f7d27fe7add5da979617e6f4732739e3f4bbcb7fbe008eac26', 'i686': 'e319aab13dd46a0594c4ebc8b944c2d4ba2016a9706084d5cc200a2ea00fb6bc', 'x86_64': '434dd2e393487bfd988e04592c52b645610aaafd26092b5fc63907f3c4f37125'}
 
 # Variables
 base_dir = f"{os.environ['PREFIX']}/var/lib"
@@ -57,10 +57,12 @@ if flag not in ["-i", "-r", "-f"]: # Show error, help and when exit.
 # Functions
 # Setup additional files
 def setup_files():
-	with open(f"{chroot_dir}/usr/etc/motd") as f: motd = f.read().replace("Termux", f"Termux-Install {arch.upper()} Container", 1)
-	motd += "Termux Install on GitHub: https://github.com/KrutosVIP/TermuxInstall\n\n"
+	with open(f"{chroot_dir}/usr/etc/motd") as f: motd = f.read().replace("Termux!", f"Termux-Install {arch.upper()} Container!\nVersion: {bootstrap_ver}", 1)
+	motd += "Termux-Install on GitHub: https://github.com/KrutosVIP/TermuxInstall\n\n"
 	motd = motd.replace("at https://termux.dev/issues", "at Termux-Install GitHub", 1)
 	with open(f"{chroot_dir}/usr/etc/motd", "w") as f: f.write(motd)
+
+	with open(f"{chroot_dir}/usr/etc/termux.install", "w") as f: f.write(f'export BOOTSTRAP_VERSION="{bootstrap_ver}"')
 
 # shell command, pass arg as normal command. Returns result code.
 def shell(command):
@@ -192,7 +194,7 @@ with tempfile.TemporaryDirectory() as work_dir:
 	if unzip(bootstrap_file, f"{chroot_dir}/usr"):
 		print("ERROR: Something gone wrong. Stop.")
 		sys.exit(0)
-	if not os.path.isdir: os.mkdir(f"{chroot_dir}/home")
+	if not os.path.isdir(f"{chroot_dir}/home"): os.mkdir(f"{chroot_dir}/home")
 
 	print("> Setting up symlinks...")
 	symlink(f"{chroot_dir}/usr/SYMLINKS.txt")
@@ -200,8 +202,7 @@ with tempfile.TemporaryDirectory() as work_dir:
 	print("> Setting up permissions...")
 	setup_perms(["./bin", "./libexec", "./lib/apt/apt-helper", "./lib/apt/methods"], "0700")
 
-	if flag != "-f":
-		setup_files()
+	setup_files()
 
 	print("Done! Use termux-chroot64 in this dir to get in chroot.")
 
