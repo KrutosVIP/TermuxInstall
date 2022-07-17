@@ -1,0 +1,13 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+PREFIX=$PREFIX/var/lib/termux_install/pacman-chroot64/
+echo "WARNING: Entire chroot directory will be removed."
+echo "Remove?"
+select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) rm -rf $PREFIX; break;;
+        No ) exit;;
+    esac
+done
+
+echo "Directory removed"
