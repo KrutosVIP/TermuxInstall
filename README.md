@@ -17,6 +17,11 @@ Or, even more faster, just install deb from Releases, by using `dpkg -i <deb>`
 
 ### Install
 
+> If you want to use termux bootstrap with pacman, replace all `termux` with `termux-pacman` <br/>
+> Example: `termux-install64` -> `termux-pacman-install64` <br/>
+> Also, you can install glibc by using command in 64-bit container (pacman-only), by using `termux-install-glibc` in container. <br/>
+> More on this: https://github.com/Maxython/glibc-for-termux/
+
 To install 64-bit container: 
 ```
 $ termux-install64
