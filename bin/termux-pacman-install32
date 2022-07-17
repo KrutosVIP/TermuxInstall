@@ -146,7 +146,7 @@ def check_integrity(file, sum):
 if (not flag in ["-f", "-r"]) and (os.path.isdir(chroot_dir)):
 	print("ERROR: Chroot dir exists. Use flag -r if you want to reinstall chroot or use termux-pacman-remove32 to remove it")
 	sys.exit()
-elif (flag == ["-r"]) and (os.path.isdir(chroot_dir)):
+elif (flag == "-r") and (os.path.isdir(chroot_dir)):
 	shutil.rmtree(chroot_dir)
 
 # Select arch

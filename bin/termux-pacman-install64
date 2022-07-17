@@ -29,22 +29,31 @@ glibc_script = f"""#!/data/data/com.termux/files/usr/bin/bash
 
 echo "WARNING: EXPERIMENTAL"
 
-pkg install wget
-wget -O /tmp/glibc.tar.xz {glibc_link}
+pacman -Syy 2>&1 > /dev/null
+if pkg install wget --noconfirm --quiet --needed && wget -O /tmp/glibc.tar.xz https://github.com/Maxython/glibc-for-termux/releases/download/20220711/gpft-20220711-aarch64.tar.xz ; then
+	echo "Installing..."
+else
+	echo "Something gone wrong"
+	exit
+fi
 
 PWD=$(pwd)
 
 cd /tmp/
 tar xJf glibc.tar.xz
 
-pacman -U glibc-for-termux/*
+if pacman -U --noconfirm glibc-for-termux/* ; then
+	echo "Installed!"
+else
+	echo "Something gone wrong"
+	exit
+fi
+
 rm -rf glibc*
 
 cd $PWD
 echo "Use grun --shell for shell with custom commands, or use grun ./binary_file to.run glibc binaries"
 echo "More info at: https://github.com/Maxython/glibc-for-termux"
-echo "Autostarting grun --shell..."
-grun --shell
 """
 
 # Variables
@@ -174,7 +183,7 @@ def check_integrity(file, sum):
 if (not flag in ["-f", "-r"]) and (os.path.isdir(chroot_dir)):
 	print("ERROR: Chroot dir exists. Use flag -r if you want to reinstall chroot or use termux-pacman-remove64 to remove it")
 	sys.exit()
-elif (flag == ["-r"]) and (os.path.isdir(chroot_dir)):
+elif (flag == "-r") and (os.path.isdir(chroot_dir)):
 	shutil.rmtree(chroot_dir)
 
 # Select arch

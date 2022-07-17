@@ -1,7 +1,7 @@
 {
     "control": {
         "Package": "termux-install",
-        "Version": "1.1.0",
+        "Version": "1.1.1",
         "Architecture": "all",
         "Maintainer": "KrutosX <developer@krutosx.tk>",
         "Depends": "python (>= 3.0), wget, proot, libandroid-support",
