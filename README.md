@@ -13,6 +13,11 @@ Or use binaries directly from there. <br/>
 
 Or, even more faster, just install deb from Releases, by using `dpkg -i <deb>`
 
+> Or install package from tur-repo:
+> ```
+> pkg install tur-repo && pkg install termux-install
+> ```
+
 ## Usage
 
 ### Install
